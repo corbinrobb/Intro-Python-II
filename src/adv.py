@@ -6,6 +6,8 @@ from item import Item
 
 from item import LightSource
 
+import os
+
 # Declare all the rooms
 
 room = {
@@ -114,6 +116,7 @@ def start_game():
                 print("\nYour Items")
                 for i in player.items:
                     print(f"  {i}")
+                # print([str(i) for i in player.items])
                 ask_for_input()
 
             # Controls
@@ -230,6 +233,7 @@ def start_game():
 
     # Start gameplay loop 
     while playing:
+        os.system('clear')
         print_surroundings()
         
         ask_for_input()
