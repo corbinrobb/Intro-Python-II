@@ -45,66 +45,10 @@ room['treasure'].s_to = room['narrow']
 # Main
 #
 
-# Make a new player object that is currently in the 'outside' room.
-
-# Write a loop that:
-#
-# * Prints the current room name
-# * Prints the current description (the textwrap module might be useful here).
-# * Waits for user input and decides what to do.
-#
-# If the user enters a cardinal direction, attempt to move to the room there.
-# Print an error message if the movement isn't allowed.  
-#
-# If the user enters "q", quit the game.
-
-
 def start_game():
     player = Player("Chad", room['outside'])
 
     playing = True
-
-    print(f"You're name is {player.name}\n")
-
-    # Handles Directional input
-    def select_room(player_input):
-
-        no_room_message = "\nYou couldn't find a room that direction!"
-
-        room = player.current_room
-        
-        # North
-        if player_input == "n":
-            if not hasattr(room, "n_to"):
-                print(no_room_message)
-                ask_for_input()
-            else:
-                player.current_room = room.n_to
-
-        # South
-        elif player_input == "s":
-            if not hasattr(room, "s_to"):
-                print(no_room_message)
-                ask_for_input()
-            else:
-                player.current_room = room.s_to
-
-        # East
-        elif player_input == "e":
-            if not hasattr(room, "e_to"):
-                print(no_room_message)
-                ask_for_input()
-            else:
-                player.current_room = room.e_to
-
-        # West
-        elif player_input == "w":
-            if not hasattr(room, "w_to"):
-                print(no_room_message)
-                ask_for_input()
-            else:
-                player.current_room = room.w_to
-
 
     # Handles Player Actions
     def player_action(player_input):
@@ -113,26 +57,15 @@ def start_game():
 
             # Inventory
             if player_input == "i":
-                print("\nYour Items")
-                for i in player.items:
-                    print(f"  {i}")
-                # print([str(i) for i in player.items])
-                ask_for_input()
+                player.print_items()
 
             # Controls
             elif player_input == "c":
-                print(("\nControls: \n"
-                    "  move [n, s, e, w]\n"
-                    "  look [l]\n"
-                    "  action [take item_name, get item_name, drop item_name]\n"
-                    "  inventory [i]\n"
-                    "  quit [q]\n"))
-                ask_for_input()
+                player.print_controls()
 
             # Look Around
             elif player_input == "l":
                 print_surroundings()
-                ask_for_input()
 
             # Quit Game
             elif player_input == "q":
@@ -142,12 +75,15 @@ def start_game():
 
             # Directional
             elif player_input in ("n", "s", "e", "w"):
-                select_room(player_input)
+                if player.current_room.get_room(player_input) != None:
+                    player.current_room = player.current_room.get_room(player_input)
+                else:
+                    print("\nYou couldn't find a room that direction!")
+                    ask_for_input()
 
             # Error for invalid input
             else:
                 print("\nPlease enter a valid input!")
-                ask_for_input()
 
         else:
             action, item_name = player_input.split()
@@ -159,35 +95,28 @@ def start_game():
                         next((i for i in player.current_room.items if i.name == item_name), None)
                     )
                     if item:
-                        player.items.append(item)
-                        player.current_room.items.remove(item)
-                        item.on_take()
-                        ask_for_input()
+                        player.take_item(item)
                     else:
                         print("\nThere is no item with that name in room!")
-                        ask_for_input()
                 else:
                     print("\nGood luck finding that in the dark!")
-                    ask_for_input()
 
 
             # Drop action
             elif action == "drop":
                 item = next((i for i in player.items if i.name == item_name), None)
                 if item:
-                    player.items.remove(item)
-                    player.current_room.items.append(item)
-                    item.on_drop()
-                    check_for_items()
-                    ask_for_input()
+                    player.drop_item(item)
                 else:
                     print("\nThere is no item with that name in your inventory!")
-                    ask_for_input()
 
              # Error for invalid input
             else:
                 print("\nPlease enter a valid input!")
-                ask_for_input()
+
+        # If player input is not any of these then ask for input again
+        if player_input not in ("n", "s", "e", "w", "q"):
+            ask_for_input()
 
 
     # Starts player input
@@ -196,13 +125,6 @@ def start_game():
             "  (type c for help)\n------\n"))
 
         player_action(player_input)
-
-
-    # Prints room items
-    def check_for_items():
-        if len(player.current_room.items) > 0:
-            print("\nIn the room you see\n")
-            player.current_room.print_items()
 
 
     # Check room and player for lightsource
@@ -226,7 +148,7 @@ def start_game():
         print(f"\nYou are in the {player.current_room.name}\n")
         if check_for_light():
             print(player.current_room.description)
-            check_for_items()
+            player.current_room.print_items()
         else:
             print("It's pitch black!")
 
